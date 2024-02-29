@@ -33,6 +33,8 @@ async fn search_points(
         Some(shard_keys) => shard_keys.into(),
     };
 
+    let filter = search_request.filter.clone();
+
     let response = do_core_search_points(
         toc.get_ref(),
         &collection.name,
@@ -42,6 +44,17 @@ async fn search_points(
         params.timeout(),
     )
     .await;
+
+    if let Some(filter) = filter {
+        crate::common::helpers::post_process_slow_request(
+            timing.elapsed(),
+            1.0,
+            toc.get_ref(),
+            &collection.name,
+            &filter,
+        )
+        .await;
+    }
 
     process_response(response, timing)
 }
